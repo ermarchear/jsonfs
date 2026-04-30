@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -g -D_GNU_SOURCE
-PKG_CFLAGS = $(shell pkg-config --cflags fuse json-c)
-PKG_LIBS = $(shell pkg-config --libs fuse json-c)
+PKG_CFLAGS = $(shell pkg-config --cflags fuse3 jansson)
+PKG_LIBS = $(shell pkg-config --libs fuse3 jansson)
 INCLUDES = -Iinclude
 
 SRCDIR = src
@@ -9,10 +9,10 @@ OBJDIR = obj
 BINDIR = bin
 
 SOURCES = $(SRCDIR)/main.c \
-          $(SRCDIR)/fuse_ops.c \
-          $(SRCDIR)/json_utils.c \
-          $(SRCDIR)/file_time.c \
-          $(SRCDIR)/save.c
+          $(SRCDIR)/fuse_callbacks.c \
+          $(SRCDIR)/handlers.c \
+          $(SRCDIR)/json_operations.c \
+          $(SRCDIR)/file_time.c
 
 OBJECTS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SOURCES))
 
@@ -24,7 +24,7 @@ $(TARGET): $(OBJECTS)
 	@mkdir -p $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $^ $(PKG_LIBS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c include/jsonfs.h
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) $(PKG_CFLAGS) $(INCLUDES) -c $< -o $@
 
@@ -35,13 +35,7 @@ distclean: clean
 	rm -rf $(BINDIR)
 
 run: $(TARGET)
-	@mkdir -p mnt
-	@echo '{"test": "hello", "folder": {}}' > test.json
+	mkdir -p mnt
 	./$(TARGET) test.json mnt -f
 
-test: $(TARGET)
-	@mkdir -p mnt
-	@echo '{"test": "hello", "folder": {"num": 42}}' > test.json
-	@echo "=== Монтируем в фоне ==="
-	./$(TARGET) test.json mnt &
-	@sleep 2
+.PHONY: all clean distclean run

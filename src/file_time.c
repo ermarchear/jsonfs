@@ -1,22 +1,24 @@
-#include "../include/jsonfs.h"
+#include "../include/common.h"
+#include "../include/file_time.h"
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
 // Поиск узла с временными метками
-struct file_time* find_file_time(const char *path, struct file_time *root) {
+struct file_time* find_node_file_time(const char *path, struct file_time *root) {
     struct file_time *curr = root;
     while (curr) {
         if (strcmp(path, curr->path) == 0) {
             return curr;
         }
-        curr = curr->next;
+        curr = curr->next_node;   // ← next_node, а не next
     }
     return NULL;
 }
 
 // Добавление нового узла с временными метками
-struct file_time* add_file_time(const char *path, struct file_time *root) {
+struct file_time* add_node_to_list_ft(const char *path, struct file_time *root, 
+                                      enum set_time flags) {
     char *path_dup = strdup(path);
     if (!path_dup) return NULL;
     
@@ -31,60 +33,54 @@ struct file_time* add_file_time(const char *path, struct file_time *root) {
     new_node->atime = now;
     new_node->mtime = now;
     new_node->ctime = now;
-    new_node->next = NULL;
+    new_node->next_node = NULL;   // ← next_node
     
     if (!root) return new_node;
     
     struct file_time *last = root;
-    while (last->next) {
-        last = last->next;
+    while (last->next_node) {      // ← next_node
+        last = last->next_node;     // ← next_node
     }
-    last->next = new_node;
+    last->next_node = new_node;     // ← next_node
     
     return new_node;
 }
 
-// Обновление времени доступа
-void update_atime(const char *path, struct jsonfs_data *data) {
-    struct file_time *ft = find_file_time(path, data->ft_list);
-    if (ft) {
-        ft->atime = time(NULL);
-    } else {
-        ft = add_file_time(path, data->ft_list);
-        if (ft && !data->ft_list) data->ft_list = ft;
+// Удаление узла из списка
+int remove_node_to_list_ft(const char *path, struct file_time *root) {
+    struct file_time *node = find_node_file_time(path, root);
+    if (!node) return -1;
+    
+    struct file_time *curr = root;
+    struct file_time *prev = NULL;
+    
+    while (curr) {
+        if (curr == node) {
+            if (prev) {
+                prev->next_node = curr->next_node;
+            }
+            free_file_time(curr);
+            return 0;
+        }
+        prev = curr;
+        curr = curr->next_node;
     }
-}
-
-// Обновление времени модификации
-void update_mtime(const char *path, struct jsonfs_data *data) {
-    struct file_time *ft = find_file_time(path, data->ft_list);
-    if (ft) {
-        ft->mtime = time(NULL);
-        ft->ctime = time(NULL);
-    } else {
-        ft = add_file_time(path, data->ft_list);
-        if (ft && !data->ft_list) data->ft_list = ft;
-    }
-}
-
-// Обновление времени изменения метаданных
-void update_ctime(const char *path, struct jsonfs_data *data) {
-    struct file_time *ft = find_file_time(path, data->ft_list);
-    if (ft) {
-        ft->ctime = time(NULL);
-    } else {
-        ft = add_file_time(path, data->ft_list);
-        if (ft && !data->ft_list) data->ft_list = ft;
-    }
+    
+    return -1;
 }
 
 // Освобождение списка временных меток
 void free_file_time_list(struct file_time *root) {
     struct file_time *curr = root;
     while (curr) {
-        struct file_time *next = curr->next;
-        free(curr->path);
-        free(curr);
+        struct file_time *next = curr->next_node;
+        free_file_time(curr);
         curr = next;
     }
+}
+
+void free_file_time(struct file_time *ft) {
+    if (!ft) return;
+    free(ft->path);
+    free(ft);
 }

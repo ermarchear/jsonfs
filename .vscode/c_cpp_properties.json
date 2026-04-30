@@ -7,7 +7,8 @@
                 "/usr/include/json-c",
                 "/usr/include/x86_64-linux-gnu",
                 "/usr/include",
-                "/usr/lib/gcc/x86_64-linux-gnu/14/include"
+                "/usr/lib/gcc/x86_64-linux-gnu/14/include",
+                "/usr/include/fuse3"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
