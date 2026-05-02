@@ -20,3 +20,8 @@ mnt/
 # Временные файлы
 *.tmp
 *.bak
+# Служебные файлы FUSE и временные папки
+atime
+ctime
+is_saved
+mnt/
