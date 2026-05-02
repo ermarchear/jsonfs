@@ -108,10 +108,12 @@ int make_file(const char *path, mode_t mode, struct jsonfs_private_data *pd) {
     time_t now = time(NULL);
     int type;
 
+    // Запрещаем swap-файлы
     if (strstr(path, ".sw")) {
         return -EPERM;
     }
 
+    // Определяем тип создаваемого объекта
     if ((mode & S_IFMT) == S_IFREG) {
         type = S_IFREG;
     }
@@ -128,6 +130,7 @@ int make_file(const char *path, mode_t mode, struct jsonfs_private_data *pd) {
     path_size = strlen(parent_path);
     key_size = 0;
 
+    // Разделяем путь на родительскую директорию и имя нового объекта
     for (int i = path_size - 1; i >= 0; i--) {
         if (parent_path[i] == '/') { 
             key_size = path_size - i - 1;
@@ -147,22 +150,54 @@ int make_file(const char *path, mode_t mode, struct jsonfs_private_data *pd) {
         return -EINVAL; 
     }
 
+    // Находим родительский узел
     parent = find_json_node(parent_path, pd->root);
     if (!parent) { 
         free(parent_path); 
         return -ENOENT; 
     }
 
+    // Проверяем, является ли родитель массивом (имеет ключи вида @N)
+    if (json_is_object(parent)) {
+        const char *pkey;
+        json_t *pvalue;
+        int is_array_container = 0;
+        
+        json_object_foreach(parent, pkey, pvalue) {
+            if (pkey[0] == '@') {
+                // Пытаемся определить, что это число после @
+                char *endptr;
+                long idx = strtol(pkey + 1, &endptr, 10);
+                if (*endptr == '\0' && idx >= 0) {
+                    is_array_container = 1;
+                    break;
+                }
+            }
+        }
+        
+        if (is_array_container) {
+            free(parent_path);
+            return -EPERM;  // Нельзя создавать новые элементы в массиве
+        }
+    }
+
+
+    // Проверяем, не существует ли уже такой ключ
     if (json_object_get(parent, key)) {
         free(parent_path);
         return -EEXIST;
     }
 
+    // Создаём новый JSON-узел
     if (type == S_IFREG) {
         new_node = json_integer(0);
     }
     else if (type == S_IFDIR) {
         new_node = json_object();
+    }
+    else {
+        free(parent_path);
+        return -EINVAL;
     }
 
     if (!new_node) { 
@@ -170,12 +205,14 @@ int make_file(const char *path, mode_t mode, struct jsonfs_private_data *pd) {
         return -ENOMEM; 
     }
 
+    // Добавляем новый узел в родительский объект
     res_set = json_object_set_new(parent, key, new_node);
     if (res_set < 0) { 
         free(parent_path);    
         return -EIO; 
     }
 
+    // Обновляем временные метки
     ft = find_node_file_time(path, pd->ft);
     if (ft) {
         ft->mtime = now;
@@ -222,7 +259,7 @@ int rm_file(const char *path, int file_type, struct jsonfs_private_data *pd) {
     if (res_find < 0) { return res_find; }
 
     json_object_del(parent, node_key);
-    remove_node_to_list_ft(path, pd->ft);
+    pd->ft = remove_node_to_list_ft(path, pd->ft);
 
     return 0;
 }
@@ -293,7 +330,7 @@ int rename_file(const char *old_path, const char *new_path, struct jsonfs_privat
         goto handle_error;
     }
 
-    remove_node_to_list_ft(old_path, pd->ft);
+    pd->ft = remove_node_to_list_ft(old_path, pd->ft);
 
     handle_error:
         free(old_parent_path);
@@ -418,10 +455,10 @@ int read_special_file(const char *path, char *buffer, size_t size,
 
     is_saved = pd->is_saved;
 
-    if (strcmp("/.status", path) == 0) {
+    if (strcmp("/.status", path) == 0 || strcmp(".status", path) == 0) {
         text = is_saved ? "SAVED\n" : "UNSAVED\n";
     }
-    else if (strcmp("/.save", path) == 0) {
+    else if (strcmp("/.save", path) == 0 || strcmp(".save", path) == 0) {
         text = is_saved ? "0" : "1";
     }
     else {
@@ -453,11 +490,11 @@ int write_json_file(const char *path, const char *buffer, size_t size,
                     off_t offset, struct jsonfs_private_data *pd) {
     json_t *old_node = NULL;
     json_t *new_node = NULL;
-    json_t *root = NULL;
+    json_t *parent = NULL;
     char *content = NULL;
-    void *res_realloc = NULL;
+    char *parent_path = NULL;
+    char *name = NULL;
     size_t content_len;
-    int res_replace;
     int ret = (int)size;
     time_t now = time(NULL);
     struct file_time *ft = NULL;
@@ -466,51 +503,84 @@ int write_json_file(const char *path, const char *buffer, size_t size,
     CHECK_POINTER(buffer, -EFAULT);
     CHECK_POINTER(pd, -EFAULT);
 
-    root = pd->root;
-    CHECK_POINTER(root, -EFAULT);
+    // Разделяем путь на родителя и имя
+    if (separate_filepath(path, &parent_path, &name) < 0) {
+        return -EINVAL;
+    }
 
-    old_node = find_json_node(path, root);
-    CHECK_POINTER(old_node, -ENOENT);
+    parent = find_json_node(parent_path, pd->root);
+    if (!parent) {
+        free(parent_path);
+        free(name);
+        return -ENOENT;
+    }
 
+    old_node = json_object_get(parent, name);
+    if (!old_node) {
+        free(parent_path);
+        free(name);
+        return -ENOENT;
+    }
+
+    // Получаем текущее значение как строку
     content = json_dumps(old_node, JSON_ENCODE_ANY | JSON_REAL_PRECISION(10));
-    CHECK_POINTER(content, -ENOMEM);
+    if (!content) {
+        free(parent_path);
+        free(name);
+        return -ENOMEM;
+    }
 
     content_len = strlen(content);
 
+    // Расширяем строку если нужно
     if (size + offset > content_len) {
-        res_realloc = realloc(content, size + offset + 1);
-        if (!res_realloc) { ret = -ENOMEM; goto handle_error; }
+        char *res_realloc = realloc(content, size + offset + 1);
+        if (!res_realloc) {
+            free(content);
+            free(parent_path);
+            free(name);
+            return -ENOMEM;
+        }
         content = res_realloc;
-
         content_len = size + offset;
         content[content_len] = '\0';
+        
+        // Заполняем нулями промежуток
+        if (offset > strlen(content)) {
+            memset(content + strlen(content), 0, offset - strlen(content));
+        }
     }
 
-    for(size_t i = offset, j = 0; j < size; i++, j++) {
+    // Копируем новые данные
+    for (size_t i = offset, j = 0; j < size; i++, j++) {
         content[i] = buffer[j];
     }
 
+    // Пробуем распарсить новое значение
     new_node = json_loads(content, JSON_DECODE_ANY, NULL);
-    if (!new_node) { ret = -EINVAL; goto handle_error; }
+    if (!new_node) {
+        // Если не распарсилось — сохраняем как строку
+        new_node = json_string(content);
+    }
 
-    res_replace = replace_json_nodes(old_node, new_node, root);
-    if (res_replace) { ret = -ENOENT; goto handle_error; }
+    // Заменяем узел
+    json_object_set_new(parent, name, new_node);
 
+    free(content);
+    free(parent_path);
+    free(name);
+
+    // Обновляем временные метки
     ft = find_node_file_time(path, pd->ft);
     if (ft) {
         ft->mtime = now;
         ft->ctime = now;
-    }
-    else {
+    } else {
         add_node_to_list_ft(path, pd->ft, SET_MTIME | SET_CTIME);
     }
 
-    free(content);
+    pd->is_saved = 0;
     return ret;
-
-    handle_error:
-        free(content);
-        return ret;
 }
 
 int write_special_file(const char *path, const char *buffer, size_t size,

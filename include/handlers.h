@@ -26,6 +26,6 @@ int read_json_file(const char *path, char *buffer, size_t size, off_t offset, st
 int read_special_file(const char *path, char *buffer, size_t size, off_t offset, struct jsonfs_private_data *pd);
 int write_json_file(const char *path, const char *buffer, size_t size, off_t offset, struct jsonfs_private_data *pd);
 int write_special_file(const char *path, const char *buffer, size_t size, off_t offset, struct jsonfs_private_data *pd);
-void destroy_private_data(struct jsonfs_private_data *pd);   // ← ДОБАВИТЬ ЭТУ СТРОКУ
+void destroy_private_data(struct jsonfs_private_data *pd);
 
 #endif

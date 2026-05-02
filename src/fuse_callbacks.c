@@ -13,7 +13,6 @@
 #include "../include/file_time.h"
 #include "../include/json_operations.h"
 
-
 int jsonfs_getattr(const char *path, struct stat *st, struct fuse_file_info *fi) {
     int res_getattr;
     (void) fi;
@@ -124,14 +123,25 @@ int jsonfs_truncate(const char *path, off_t len, struct fuse_file_info *fi) {
 }
 
 int jsonfs_open(const char *path, struct fuse_file_info *fi) {
-    if ((fi->flags & O_TRUNC) == O_TRUNC) {
-        struct fuse_context *ctx = fuse_get_context();
-        struct jsonfs_private_data *pd = ctx->private_data;
-        CHECK_POINTER(pd, -ENOMEM);
-
-        trunc_json_file(path, 0, pd);
+    struct fuse_context *ctx = fuse_get_context();
+    struct jsonfs_private_data *pd = ctx->private_data;
+    CHECK_POINTER(pd, -ENOMEM);
+    
+    if (strcmp(path, "/.save") == 0 || strcmp(path, ".save") == 0) {
+        if ((fi->flags & O_ACCMODE) != O_WRONLY) {
+            return -EACCES;
+        }
+        return 0;
     }
-
+    
+    if (strcmp(path, "/.status") == 0 || strcmp(path, ".status") == 0) {
+        return 0;
+    }
+    
+    json_t *node = find_json_node(path, pd->root);
+    if (!node) return -ENOENT;
+    if (json_is_object(node)) return -EISDIR;
+    
     return 0;
 }
 
@@ -219,9 +229,23 @@ void jsonfs_destroy(void *userdata) {
 }
 
 int jsonfs_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi) {
-    // Упрощённая версия
-    (void) path;
-    (void) tv;
-    (void) fi;
+    struct fuse_context *ctx = fuse_get_context();
+    struct jsonfs_private_data *pd = ctx->private_data;
+    CHECK_POINTER(pd, -ENOMEM);
+
+    struct file_time *ft = find_node_file_time(path, pd->ft);
+    if (ft) {
+        ft->atime = tv[0].tv_sec;
+        ft->mtime = tv[1].tv_sec;
+        ft->ctime = tv[1].tv_sec;
+    } else {
+        ft = add_node_to_list_ft(path, pd->ft, SET_ATIME | SET_MTIME | SET_CTIME);
+        if (ft) {
+            ft->atime = tv[0].tv_sec;
+            ft->mtime = tv[1].tv_sec;
+            ft->ctime = tv[1].tv_sec;
+        }
+    }
+
     return 0;
 }

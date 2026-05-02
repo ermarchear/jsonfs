@@ -60,9 +60,110 @@ json_t *normalize_json(json_t *root, int is_root) {
         return NULL;
 }
 
+// Полная версия denormalize_json
 json_t *denormalize_json(json_t *root) {
-    if (!root) return NULL;
-    return json_deep_copy(root);
+    json_t *result = NULL;
+    json_t *value = NULL;
+    const char *key = NULL;
+    char *original_key = NULL;
+    json_t *converted_val = NULL;
+    int is_array = 0;
+    size_t array_len = 0;
+    
+    CHECK_POINTER(root, NULL);
+    
+    // Скалярное значение на верхнем уровне
+    if (json_is_string(root) || json_is_integer(root) || 
+        json_is_real(root) || json_is_boolean(root) || json_is_null(root)) {
+        return json_copy(root);
+    }
+    
+    // Массив: ищем ключи вида @0, @1, @2...
+    if (json_is_object(root)) {
+        json_object_foreach(root, key, value) {
+            if (key[0] == '@' && strlen(key) > 1) {
+                char *endptr;
+                long idx = strtol(key + 1, &endptr, 10);
+                if (*endptr == '\0' && idx >= 0) {
+                    is_array = 1;
+                    if (idx + 1 > array_len) array_len = idx + 1;
+                }
+            }
+        }
+        
+        if (is_array) {
+            // Создаём массив JSON
+            result = json_array();
+            CHECK_POINTER(result, NULL);
+            
+            // Заполняем массив
+            for (size_t i = 0; i < array_len; i++) {
+                char key_str[32];
+                snprintf(key_str, sizeof(key_str), "%s%zu", SPECIAL_PREFIX, i);
+                json_t *item = json_object_get(root, key_str);
+                if (item) {
+                    converted_val = denormalize_json(item);
+                    if (!converted_val) { goto handle_error; }
+                    json_array_append_new(result, converted_val);
+                } else {
+                    json_array_append_new(result, json_null());
+                }
+            }
+            return result;
+        }
+    }
+    
+    // Обычный объект
+    if (json_is_object(root)) {
+        result = json_object();
+        CHECK_POINTER(result, NULL);
+        
+        json_object_foreach(root, key, value) {
+            // Пропускаем скалярный маркер
+            if (strcmp(key, SCALAR_NAME) == 0) {
+                json_decref(result);
+                return denormalize_json(value);
+            }
+            
+            // Пропускаем элементы массива (уже обработаны)
+            if (key[0] == '@' && strlen(key) > 1) {
+                char *endptr;
+                strtol(key + 1, &endptr, 10);
+                if (*endptr == '\0') {
+                    continue;
+                }
+            }
+            
+            // Восстанавливаем оригинальное имя ключа
+            if (strstr(key, SPECIAL_SLASH)) {
+                original_key = reverse_replace_slash(key);
+            } else {
+                original_key = strdup(key);
+            }
+            
+            if (!original_key) { goto handle_error; }
+            
+            converted_val = denormalize_json(value);
+            if (!converted_val) { 
+                free(original_key);
+                goto handle_error; 
+            }
+            
+            json_object_set_new(result, original_key, converted_val);
+            free(original_key);
+            original_key = NULL;
+        }
+        
+        return result;
+    }
+    
+    // Скаляр
+    return json_copy(root);
+    
+    handle_error:
+        free(original_key);
+        json_decref(result);
+        return NULL;
 }
 
 json_t *find_json_node(const char *path, json_t *root) {
@@ -208,6 +309,8 @@ int replace_json_nodes(json_t *old_node, json_t *new_node, json_t *root) {
 
     if (json_is_object(parent)) {
         json_object_set_new(parent, key, json_copy(new_node));
+    } else {
+        return -ENOENT;
     }
 
     json_decref(new_node);
@@ -233,7 +336,10 @@ int count_subdirs(json_t *obj) {
 }
 
 int is_special_file(const char *path) {
-    if (strcmp("/.status", path) == 0 || strcmp("/.save", path) == 0) {
+    if (strcmp("/.status", path) == 0 || 
+        strcmp(".status", path) == 0 ||
+        strcmp("/.save", path) == 0 || 
+        strcmp(".save", path) == 0) {
         return 1;
     }
     return 0;

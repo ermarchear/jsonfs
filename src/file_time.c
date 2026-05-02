@@ -4,19 +4,17 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Поиск узла с временными метками
 struct file_time* find_node_file_time(const char *path, struct file_time *root) {
     struct file_time *curr = root;
     while (curr) {
         if (strcmp(path, curr->path) == 0) {
             return curr;
         }
-        curr = curr->next_node;   // ← next_node, а не next
+        curr = curr->next_node;
     }
     return NULL;
 }
 
-// Добавление нового узла с временными метками
 struct file_time* add_node_to_list_ft(const char *path, struct file_time *root, 
                                       enum set_time flags) {
     char *path_dup = strdup(path);
@@ -33,43 +31,42 @@ struct file_time* add_node_to_list_ft(const char *path, struct file_time *root,
     new_node->atime = now;
     new_node->mtime = now;
     new_node->ctime = now;
-    new_node->next_node = NULL;   // ← next_node
+    new_node->next_node = NULL;
     
     if (!root) return new_node;
     
     struct file_time *last = root;
-    while (last->next_node) {      // ← next_node
-        last = last->next_node;     // ← next_node
+    while (last->next_node) {
+        last = last->next_node;
     }
-    last->next_node = new_node;     // ← next_node
+    last->next_node = new_node;
     
     return new_node;
 }
 
-// Удаление узла из списка
-int remove_node_to_list_ft(const char *path, struct file_time *root) {
-    struct file_time *node = find_node_file_time(path, root);
-    if (!node) return -1;
-    
+// Исправленная версия — возвращает новый корень
+struct file_time* remove_node_to_list_ft(const char *path, struct file_time *root) {
     struct file_time *curr = root;
     struct file_time *prev = NULL;
     
     while (curr) {
-        if (curr == node) {
+        if (strcmp(path, curr->path) == 0) {
             if (prev) {
                 prev->next_node = curr->next_node;
+            } else {
+                // Удаляем корневой узел
+                root = curr->next_node;
             }
             free_file_time(curr);
-            return 0;
+            return root;
         }
         prev = curr;
         curr = curr->next_node;
     }
     
-    return -1;
+    return root;
 }
 
-// Освобождение списка временных меток
 void free_file_time_list(struct file_time *root) {
     struct file_time *curr = root;
     while (curr) {
