@@ -1,25 +1,61 @@
 #ifndef JSONFS_H
 #define JSONFS_H
 
+#define FUSE_USE_VERSION 35
+
 #include <fuse.h>
-#include <sys/stat.h>
 #include <jansson.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <pthread.h>
 #include <time.h>
 
-#include "common.h"
-#include "handlers.h"
-#include "file_time.h"
-#include "json_operations.h"
+#define MAX_PATH 4096
+#define MAX_DATA 8192
 
-// Структура для аргументов FUSE
-struct private_args {
-    int fuse_argc;
-    char **fuse_argv;
-};
+typedef struct {
+    char *json_path;
+    json_t *root;
+    pthread_mutex_t mutex;
+    int modified;
+} jsonfs_state;
 
-struct fuse_operations get_fuse_op(void);
-int get_fuse_args(int argc, char **argv, struct private_args *args);
-struct jsonfs_private_data *init_private_data(json_t *json_root, const char *path);
-void destroy_private_data(struct jsonfs_private_data *pd);
+// JSON operations (ОБЪЯВЛЕНИЯ функций из jsonfs_ops.c)
+json_t* jsonfs_get_node(json_t *root, const char *path);
+int jsonfs_create_path(json_t *root, const char *path, json_t *value);
+int jsonfs_delete_path(json_t *root, const char *path);
+int jsonfs_set_value(json_t *root, const char *path, json_t *value);
+char** jsonfs_list_dir(json_t *root, const char *path, int *count);
+
+// Save operations
+int jsonfs_force_save(jsonfs_state *state);
+int jsonfs_is_modified(jsonfs_state *state);
+
+// FUSE callbacks
+void* jsonfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg);
+void jsonfs_destroy(void *private_data);
+int jsonfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi);
+int jsonfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
+                   off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags);
+int jsonfs_open(const char *path, struct fuse_file_info *fi);
+int jsonfs_read(const char *path, char *buf, size_t size, off_t offset, 
+                struct fuse_file_info *fi);
+int jsonfs_write(const char *path, const char *buf, size_t size, 
+                 off_t offset, struct fuse_file_info *fi);
+int jsonfs_create(const char *path, mode_t mode, struct fuse_file_info *fi);
+int jsonfs_unlink(const char *path);
+int jsonfs_mkdir(const char *path, mode_t mode);
+int jsonfs_rmdir(const char *path);
+int jsonfs_rename(const char *from, const char *to, unsigned int flags);
+int jsonfs_truncate(const char *path, off_t size, struct fuse_file_info *fi);
+int jsonfs_utimens(const char *path, const struct timespec ts[2], struct fuse_file_info *fi);
+int jsonfs_fsync(const char *path, int isdatasync, struct fuse_file_info *fi);
 
 #endif

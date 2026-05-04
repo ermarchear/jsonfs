@@ -1,41 +1,38 @@
 CC = gcc
-CFLAGS = -Wall -g -D_GNU_SOURCE
-PKG_CFLAGS = $(shell pkg-config --cflags fuse3 jansson)
-PKG_LIBS = $(shell pkg-config --libs fuse3 jansson)
-INCLUDES = -Iinclude
+CFLAGS = -D_FILE_OFFSET_BITS=64 -Wall -Wextra -g -Iinclude $(shell pkg-config fuse3 --cflags)
+LDFLAGS = $(shell pkg-config fuse3 --libs) -ljansson -lpthread
 
-SRCDIR = src
-OBJDIR = obj
-BINDIR = bin
+SRC_DIR = src
+INC_DIR = include
+OBJ_DIR = objects
+BIN_DIR = bin
 
-SOURCES = $(SRCDIR)/main.c \
-          $(SRCDIR)/fuse_callbacks.c \
-          $(SRCDIR)/handlers.c \
-          $(SRCDIR)/json_operations.c \
-          $(SRCDIR)/file_time.c
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/jsonfs.c $(SRC_DIR)/jsonfs_ops.c
+OBJECTS = $(OBJ_DIR)/main.o $(OBJ_DIR)/jsonfs.o $(OBJ_DIR)/jsonfs_ops.o
+TARGET = $(BIN_DIR)/jsonfs
 
-OBJECTS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SOURCES))
+all: $(OBJ_DIR) $(BIN_DIR) $(TARGET)
 
-TARGET = $(BINDIR)/jsonfs
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
 
-all: $(TARGET)
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
 $(TARGET): $(OBJECTS)
-	@mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $^ $(PKG_LIBS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+	@echo "Build complete: $(TARGET)"
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) $(PKG_CFLAGS) $(INCLUDES) -c $< -o $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/jsonfs.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJDIR)
+	rm -f $(OBJ_DIR)/*.o $(TARGET)
 
-distclean: clean
-	rm -rf $(BINDIR)
+cleanall: clean
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
 run: $(TARGET)
-	mkdir -p mnt
-	./$(TARGET) test.json mnt -f
+	./$(TARGET) Json_Files/data.json mnt
 
-.PHONY: all clean distclean run
+.PHONY: all clean cleanall run

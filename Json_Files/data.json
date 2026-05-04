@@ -1,1 +1,243 @@
-{"products":[{"id":"DGS-1210-28","name":"Коммутатор D-Link DGS-1210-28","category":"Коммутаторы","price":18990,"currency":"RUB","in_stock":true,"specs":{"ports":"28x Gigabit Ethernet","type":"Smart Switch","poe":false,"power_consumption":"28 Вт","management":"Web, SNMP, Telnet"}},{"id":"DGS-1100-08P","name":"Коммутатор D-Link DGS-1100-08P","category":"Коммутаторы","price":8490,"currency":"RUB","in_stock":true,"specs":{"ports":"8x Gigabit PoE","type":"Smart Switch с PoE","poe":true,"poe_budget":"64 Вт","management":"Web, Smart Console"}},{"id":"DIR-3060","name":"Маршрутизатор D-Link DIR-3060","category":"Маршрутизаторы","price":12990,"currency":"RUB","in_stock":true,"specs":{"wifi_standard":"802.11ax (Wi-Fi 6)","speed":"до 3000 Мбит\/с","mesh_support":true,"ports":"4x Gigabit LAN, 1x Gigabit WAN","cpu":"4-ядерный 1.5 ГГц"}},{"id":"DIR-825","name":"Маршрутизатор D-Link DIR-825","category":"Маршрутизаторы","price":5490,"currency":"RUB","in_stock":false,"specs":{"wifi_standard":"802.11ac","speed":"до 1200 Мбит\/с","mesh_support":false,"ports":"4x Fast Ethernet","usb_port":true}},{"id":"DAP-2662","name":"Точка доступа D-Link DAP-2662","category":"Оборудование Wi-Fi","price":11290,"currency":"RUB","in_stock":true,"specs":{"standard":"802.11ac Wave 2","speed":"до 1200 Мбит\/с","mount":"потолочная \/ настенная","poe":true,"max_clients":128}},{"id":"DWR-921","name":"4G роутер D-Link DWR-921","category":"Устройства LTE","price":6990,"currency":"RUB","in_stock":true,"specs":{"lte_category":4,"speed":"до 150 Мбит\/с (LTE)","wifi":"802.11n, до 300 Мбит\/с","lan_ports":"2x Fast Ethernet","external_antenna":true}},{"id":"DCS-8300LH","name":"IP камера D-Link DCS-8300LH","category":"Видеонаблюдение","price":4990,"currency":"RUB","in_stock":true,"specs":{"resolution":"1280x720 (HD)","night_vision":true,"viewing_angle":"110°","motion_detection":true,"cloud_storage":true}},{"id":"DFL-870","name":"Межсетевой экран D-Link DFL-870","category":"Межсетевые экраны","price":45990,"currency":"RUB","in_stock":true,"specs":{"type":"NGFW (Next Gen Firewall)","throughput":"950 Мбит\/с","vpn_tunnels":100,"interfaces":"5x Gigabit RJ-45","features":"IPS, Anti-Virus, Web Filtering"}},{"id":"DVG-5004S","name":"VoIP шлюз D-Link DVG-5004S","category":"Устройства VoIP","price":11290,"currency":"RUB","in_stock":false,"specs":{"fxo_ports":4,"fax_support":true,"protocols":"SIP, IAX2","codecs":"G.711, G.729, G.723"}},{"id":"DAP-1320","name":"Wi-Fi репитер D-Link DAP-1320","category":"Расширение сети","price":1790,"currency":"RUB","in_stock":true,"specs":{"type":"Wi-Fi усилитель","standard":"802.11n","speed":"до 300 Мбит\/с","wall_plug":true,"setup":"кнопка WPS"}},{"id":"DEM-310GT","name":"SFP модуль D-Link DEM-310GT","category":"Трансиверы","price":3450,"currency":"RUB","in_stock":true,"specs":{"type":"SFP","speed":"1000Base-LX","distance":"10 км","wavelength":"1310 нм","connector":"LC"}},{"id":"DSL-3782","name":"VDSL2 роутер D-Link DSL-3782","category":"Устройства xDSL","price":7490,"currency":"RUB","in_stock":true,"specs":{"type":"VDSL2\/ADSL2+ роутер","wifi":"802.11ac, до 1200 Мбит\/с","ports":"4x Gigabit LAN","usb_port":true,"voip_support":true}},{"id":"DP-301P","name":"Принт-сервер D-Link DP-301P+","category":"Принт-серверы","price":2490,"currency":"RUB","in_stock":true,"specs":{"interface":"Parallel (LPT)","protocols":"TCP\/IP, NetBEUI, AppleTalk","management":"Web, Telnet, PSAdmin"}},{"id":"DHP-701AV","name":"PowerLine адаптер D-Link DHP-701AV","category":"PowerLine","price":4990,"currency":"RUB","in_stock":true,"specs":{"speed":"2000 Мбит\/с","passthrough":true,"encryption":"128-bit AES","ports":"1x Gigabit Ethernet","range":"до 500 м"}},{"id":"DKVM-22U","name":"KVM переключатель D-Link DKVM-22U","category":"Переключатели KVM","price":2990,"currency":"RUB","in_stock":true,"specs":{"ports":"2x USB","resolution":"до 2048x1536","hotkeys":true,"cable_length":"1.8 м"}},{"id":"DWA-192","name":"Wi-Fi адаптер D-Link DWA-192","category":"Сетевые адаптеры","price":3990,"currency":"RUB","in_stock":false,"specs":{"interface":"USB 3.0","standard":"802.11ac","speed":"до 1900 Мбит\/с","antenna":"4x встроенные","dual_band":true}}],"total_products":16,"last_updated":"2025-05-24","newfile":{}}
+{
+  "products": [
+    {
+      "id": "DGS-1210-28",
+      "name": "Коммутатор D-Link DGS-1210-28",
+      "category": "Коммутаторы",
+      "price": "15990",
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "ports": "28x Gigabit Ethernet",
+        "type": "Smart Switch",
+        "poe": false,
+        "power_consumption": "28 Вт",
+        "management": "Web, SNMP, Telnet"
+      }
+    },
+    {
+      "id": "DGS-1100-08P",
+      "name": "Коммутатор D-Link DGS-1100-08P",
+      "category": "Коммутаторы",
+      "price": 8490,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "ports": "8x Gigabit PoE",
+        "type": "Smart Switch с PoE",
+        "poe": true,
+        "poe_budget": "64 Вт",
+        "management": "Web, Smart Console"
+      }
+    },
+    {
+      "id": "DIR-3060",
+      "name": "Маршрутизатор D-Link DIR-3060",
+      "category": "Маршрутизаторы",
+      "price": 12990,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "wifi_standard": "802.11ax (Wi-Fi 6)",
+        "speed": "до 3000 Мбит/с",
+        "mesh_support": true,
+        "ports": "4x Gigabit LAN, 1x Gigabit WAN",
+        "cpu": "4-ядерный 1.5 ГГц"
+      }
+    },
+    {
+      "id": "DIR-825",
+      "name": "Маршрутизатор D-Link DIR-825",
+      "category": "Маршрутизаторы",
+      "price": 5490,
+      "currency": "RUB",
+      "in_stock": false,
+      "specs": {
+        "wifi_standard": "802.11ac",
+        "speed": "до 1200 Мбит/с",
+        "mesh_support": false,
+        "ports": "4x Fast Ethernet",
+        "usb_port": true
+      }
+    },
+    {
+      "id": "DAP-2662",
+      "name": "Точка доступа D-Link DAP-2662",
+      "category": "Оборудование Wi-Fi",
+      "price": 11290,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "standard": "802.11ac Wave 2",
+        "speed": "до 1200 Мбит/с",
+        "mount": "потолочная / настенная",
+        "poe": true,
+        "max_clients": 128
+      }
+    },
+    {
+      "id": "DWR-921",
+      "name": "4G роутер D-Link DWR-921",
+      "category": "Устройства LTE",
+      "price": 6990,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "lte_category": 4,
+        "speed": "до 150 Мбит/с (LTE)",
+        "wifi": "802.11n, до 300 Мбит/с",
+        "lan_ports": "2x Fast Ethernet",
+        "external_antenna": true
+      }
+    },
+    {
+      "id": "DCS-8300LH",
+      "name": "IP камера D-Link DCS-8300LH",
+      "category": "Видеонаблюдение",
+      "price": 4990,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "resolution": "1280x720 (HD)",
+        "night_vision": true,
+        "viewing_angle": "110°",
+        "motion_detection": true,
+        "cloud_storage": true
+      }
+    },
+    {
+      "id": "DFL-870",
+      "name": "Межсетевой экран D-Link DFL-870",
+      "category": "Межсетевые экраны",
+      "price": 45990,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "type": "NGFW (Next Gen Firewall)",
+        "throughput": "950 Мбит/с",
+        "vpn_tunnels": 100,
+        "interfaces": "5x Gigabit RJ-45",
+        "features": "IPS, Anti-Virus, Web Filtering"
+      }
+    },
+    {
+      "id": "DVG-5004S",
+      "name": "VoIP шлюз D-Link DVG-5004S",
+      "category": "Устройства VoIP",
+      "price": 11290,
+      "currency": "RUB",
+      "in_stock": false,
+      "specs": {
+        "fxo_ports": 4,
+        "fax_support": true,
+        "protocols": "SIP, IAX2",
+        "codecs": "G.711, G.729, G.723"
+      }
+    },
+    {
+      "id": "DAP-1320",
+      "name": "Wi-Fi репитер D-Link DAP-1320",
+      "category": "Расширение сети",
+      "price": 1790,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "type": "Wi-Fi усилитель",
+        "standard": "802.11n",
+        "speed": "до 300 Мбит/с",
+        "wall_plug": true,
+        "setup": "кнопка WPS"
+      }
+    },
+    {
+      "id": "DEM-310GT",
+      "name": "SFP модуль D-Link DEM-310GT",
+      "category": "Трансиверы",
+      "price": 3450,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "type": "SFP",
+        "speed": "1000Base-LX",
+        "distance": "10 км",
+        "wavelength": "1310 нм",
+        "connector": "LC"
+      }
+    },
+    {
+      "id": "DSL-3782",
+      "name": "VDSL2 роутер D-Link DSL-3782",
+      "category": "Устройства xDSL",
+      "price": 7490,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "type": "VDSL2/ADSL2+ роутер",
+        "wifi": "802.11ac, до 1200 Мбит/с",
+        "ports": "4x Gigabit LAN",
+        "usb_port": true,
+        "voip_support": true
+      }
+    },
+    {
+      "id": "DP-301P",
+      "name": "Принт-сервер D-Link DP-301P+",
+      "category": "Принт-серверы",
+      "price": 2490,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "interface": "Parallel (LPT)",
+        "protocols": "TCP/IP, NetBEUI, AppleTalk",
+        "management": "Web, Telnet, PSAdmin"
+      }
+    },
+    {
+      "id": "DHP-701AV",
+      "name": "PowerLine адаптер D-Link DHP-701AV",
+      "category": "PowerLine",
+      "price": 4990,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "speed": "2000 Мбит/с",
+        "passthrough": true,
+        "encryption": "128-bit AES",
+        "ports": "1x Gigabit Ethernet",
+        "range": "до 500 м"
+      }
+    },
+    {
+      "id": "DKVM-22U",
+      "name": "KVM переключатель D-Link DKVM-22U",
+      "category": "Переключатели KVM",
+      "price": 2990,
+      "currency": "RUB",
+      "in_stock": true,
+      "specs": {
+        "ports": "2x USB",
+        "resolution": "до 2048x1536",
+        "hotkeys": true,
+        "cable_length": "1.8 м"
+      }
+    },
+    {
+      "id": "DWA-192",
+      "name": "Wi-Fi адаптер D-Link DWA-192",
+      "category": "Сетевые адаптеры",
+      "price": 3990,
+      "currency": "RUB",
+      "in_stock": false,
+      "specs": {
+        "interface": "USB 3.0",
+        "standard": "802.11ac",
+        "speed": "до 1900 Мбит/с",
+        "antenna": "4x встроенные",
+        "dual_band": true
+      }
+    }
+  ],
+  "total_products": 16,
+  "last_updated": "2025-05-24",
+  "newfile": {}
+}
