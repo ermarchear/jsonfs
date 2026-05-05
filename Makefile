@@ -1,38 +1,56 @@
 CC = gcc
-CFLAGS = -D_FILE_OFFSET_BITS=64 -Wall -Wextra -g -Iinclude $(shell pkg-config fuse3 --cflags)
-LDFLAGS = $(shell pkg-config fuse3 --libs) -ljansson -lpthread
+CFLAGS = -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused-parameter -g -Iinclude $(shell pkg-config fuse3 --cflags 2>/dev/null || pkg-config fuse --cflags)
+LDFLAGS = $(shell pkg-config fuse3 --libs 2>/dev/null || pkg-config fuse --libs) -ljansson
 
-SRC_DIR = src
-INC_DIR = include
-OBJ_DIR = objects
-BIN_DIR = bin
+SRCDIR = src
+INCDIR = include
+OBJDIR = objects
+BINDIR = bin
 
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/jsonfs.c $(SRC_DIR)/jsonfs_ops.c
-OBJECTS = $(OBJ_DIR)/main.o $(OBJ_DIR)/jsonfs.o $(OBJ_DIR)/jsonfs_ops.o
-TARGET = $(BIN_DIR)/jsonfs
+SOURCES = $(wildcard $(SRCDIR)/*.c)
+OBJECTS = $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+TARGET = $(BINDIR)/jsonfs
 
-all: $(OBJ_DIR) $(BIN_DIR) $(TARGET)
+$(shell mkdir -p $(OBJDIR) $(BINDIR))
 
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+.PHONY: all clean install test
 
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+all: $(TARGET)d
 
 $(TARGET): $(OBJECTS)
-	$(CC) -o $@ $^ $(LDFLAGS)
-	@echo "Build complete: $(TARGET)"
+	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/jsonfs.h
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCDIR)/jsonfs.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ_DIR)/*.o $(TARGET)
+	rm -rf $(OBJDIR)/*.o $(TARGET)
 
-cleanall: clean
-	rm -rf $(OBJ_DIR) $(BIN_DIR)
+install: $(TARGET)
+	sudo cp $(TARGET) /usr/local/bin/
 
-run: $(TARGET)
-	./$(TARGET) Json_Files/data.json mnt
-
-.PHONY: all clean cleanall run
+test: $(TARGET)
+	@echo "=== JSONFS Test ==="
+	@rm -rf /tmp/test.json /tmp/test_mnt
+	@echo '{"test":"hello","number":42,"flag":true}' > /tmp/test.json
+	@mkdir -p /tmp/test_mnt
+	@echo "Starting JSONFS..."
+	@$(TARGET) /tmp/test.json /tmp/test_mnt &
+	@sleep 2
+	@echo "=== Reading ==="
+	@cat /tmp/test_mnt/test
+	@echo "\n=== Writing with type detection ==="
+	@echo "123" > /tmp/test_mnt/number
+	@echo "false" > /tmp/test_mnt/flag
+	@echo "null" > /tmp/test_mnt/null_val
+	@echo "=== Modified status ==="
+	@cat /tmp/test_mnt/.modified
+	@echo "\n=== Saving ==="
+	@echo "save" > /tmp/test_mnt/.save
+	@echo "=== Status after save ==="
+	@cat /tmp/test_mnt/.modified
+	@echo "\n=== Unmounting ==="
+	@fusermount3 -u /tmp/test_mnt 2>/dev/null
+	@echo "=== Final JSON ==="
+	@cat /tmp/test.json
+	@rm -rf /tmp/test.json /tmp/test_mnt

@@ -14,8 +14,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <pthread.h>
 #include <time.h>
+#include <ctype.h>
 
 #define MAX_PATH 4096
 #define MAX_DATA 8192
@@ -23,16 +23,15 @@
 typedef struct {
     char *json_path;
     json_t *root;
-    pthread_mutex_t mutex;
     int modified;
+    time_t last_save_time;
 } jsonfs_state;
 
-// JSON operations (ОБЪЯВЛЕНИЯ функций из jsonfs_ops.c)
+// JSON operations
 json_t* jsonfs_get_node(json_t *root, const char *path);
 int jsonfs_create_path(json_t *root, const char *path, json_t *value);
 int jsonfs_delete_path(json_t *root, const char *path);
 int jsonfs_set_value(json_t *root, const char *path, json_t *value);
-char** jsonfs_list_dir(json_t *root, const char *path, int *count);
 
 // Save operations
 int jsonfs_force_save(jsonfs_state *state);

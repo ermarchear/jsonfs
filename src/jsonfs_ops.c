@@ -4,6 +4,16 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
+
+// Проверка валидности ключа (без слэшей и спецсимволов)
+static int is_valid_key(const char *key) {
+    if (!key || strlen(key) == 0) return 0;
+    if (strchr(key, '/') != NULL) return 0;
+    if (strchr(key, '.') == key && strlen(key) == 1) return 0;
+    if (strchr(key, '.') == key && *(key+1) == '.' && strlen(key) == 2) return 0;
+    return 1;
+}
 
 json_t* jsonfs_get_node(json_t *root, const char *path) {
     if (strcmp(path, "/") == 0) {
@@ -19,6 +29,10 @@ json_t* jsonfs_get_node(json_t *root, const char *path) {
     
     while (token) {
         if (!current) {
+            return NULL;
+        }
+        
+        if (!is_valid_key(token)) {
             return NULL;
         }
         
@@ -64,6 +78,11 @@ int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
             break;
         }
         
+        if (!is_valid_key(token)) {
+            json_decref(value);
+            return -EINVAL;
+        }
+        
         if (json_is_object(current)) {
             json_t *next = json_object_get(current, token);
             if (!next) {
@@ -98,6 +117,11 @@ int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
     if (!last_key) {
         json_decref(value);
         return -ENOENT;
+    }
+    
+    if (!is_valid_key(last_key)) {
+        json_decref(value);
+        return -EINVAL;
     }
     
     if (json_is_object(current)) {
@@ -141,6 +165,10 @@ int jsonfs_delete_path(json_t *root, const char *path) {
             break;
         }
         
+        if (!is_valid_key(token)) {
+            return -ENOENT;
+        }
+        
         parent = current;
         
         if (json_is_object(current)) {
@@ -169,7 +197,9 @@ int jsonfs_delete_path(json_t *root, const char *path) {
     }
     
     if (parent && json_is_object(parent)) {
-        json_object_del(parent, last_key);
+        if (is_valid_key(last_key)) {
+            json_object_del(parent, last_key);
+        }
         return 0;
     } else if (parent && json_is_array(parent)) {
         char *endptr;
@@ -179,7 +209,9 @@ int jsonfs_delete_path(json_t *root, const char *path) {
             return 0;
         }
     } else if (json_is_object(current)) {
-        json_object_del(current, last_key);
+        if (is_valid_key(last_key)) {
+            json_object_del(current, last_key);
+        }
         return 0;
     } else if (json_is_array(current)) {
         char *endptr;
@@ -195,42 +227,4 @@ int jsonfs_delete_path(json_t *root, const char *path) {
 
 int jsonfs_create_path(json_t *root, const char *path, json_t *value) {
     return jsonfs_set_value(root, path, value);
-}
-
-char** jsonfs_list_dir(json_t *root, const char *path, int *count) {
-    json_t *dir = jsonfs_get_node(root, path);
-    if (!dir || (!json_is_object(dir) && !json_is_array(dir))) {
-        *count = 0;
-        return NULL;
-    }
-    
-    int capacity = 10;
-    char **list = malloc(capacity * sizeof(char*));
-    *count = 0;
-    
-    if (json_is_object(dir)) {
-        const char *key;
-        json_t *value;
-        json_object_foreach(dir, key, value) {
-            if (*count >= capacity) {
-                capacity *= 2;
-                list = realloc(list, capacity * sizeof(char*));
-            }
-            list[*count] = strdup(key);
-            (*count)++;
-        }
-    } else if (json_is_array(dir)) {
-        for (size_t i = 0; i < json_array_size(dir); i++) {
-            if (*count >= capacity) {
-                capacity *= 2;
-                list = realloc(list, capacity * sizeof(char*));
-            }
-            char idx[32];
-            snprintf(idx, sizeof(idx), "%zu", i);
-            list[*count] = strdup(idx);
-            (*count)++;
-        }
-    }
-    
-    return list;
 }
