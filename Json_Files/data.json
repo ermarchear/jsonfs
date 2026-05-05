@@ -1,11 +1,17 @@
 {
-    "server": "your-proxy-server.com",
-    "server_port": 8388,
-    "local_port": 1080,
-    "password": "your_strong_password_here",
-    "method": "chacha20-ietf-poly1305",
-    "local_address": "0.0.0.0",
-    "timeout": 300,
-    "fast_open": false,
-    "workers": 1
+  "server": "your-proxy-server.com",
+  "server_port": 8388,
+  "local_port": 1080,
+  "password": "your_strong_password_here",
+  "method": "chacha20-ietf-poly1305",
+  "local_address": "0.0.0.0",
+  "timeout": 300,
+  "fast_open": false,
+  "workers": 1,
+  "newfile": "new content",
+  "newnumber": 12345,
+  "newbool": true,
+  "newdir": {
+    "file": "data in dir"
+  }
 }

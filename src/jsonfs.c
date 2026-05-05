@@ -211,7 +211,6 @@ int jsonfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *
     
     return 0;
 }
-
 int jsonfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
                    off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags) {
     (void)offset;
@@ -240,18 +239,20 @@ int jsonfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         const char *key;
         json_t *value;
         json_object_foreach(dir, key, value) {
-            // Пропускаем специальные файлы
+            // Пропускаем специальные файлы в корне
             if (strcmp(path, "/") == 0) {
                 if (key[0] == '.') continue;
             }
             // Пропускаем ключи со слешами
             if (strchr(key, '/') != NULL) continue;
+            // Пропускаем пустые ключи
+            if (strlen(key) == 0) continue;
+            
             filler(buf, key, NULL, 0, 0);
         }
     } else if (json_is_array(dir)) {
-        size_t i;
         char idx_str[32];
-        for (i = 0; i < json_array_size(dir); i++) {
+        for (size_t i = 0; i < json_array_size(dir); i++) {
             snprintf(idx_str, sizeof(idx_str), "%zu", i);
             filler(buf, idx_str, NULL, 0, 0);
         }
