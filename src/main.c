@@ -25,21 +25,14 @@ static struct fuse_operations jsonfs_ops = {
 
 void print_usage(const char *progname) {
     fprintf(stderr, "JSONFS - JSON Файловая система v2.0\n");
-    fprintf(stderr, "Использование: %s <json_файл> <точка_монтирования> [опции]\n", progname);
-    fprintf(stderr, "\nСпециальные файлы в точке монтирования:\n");
-    fprintf(stderr, "  .save      - Записать что угодно для сохранения изменений\n");
-    fprintf(stderr, "  .modified  - Проверить наличие изменений (1=да, 0=нет)\n");
-    fprintf(stderr, "  .sync      - Синхронизация с диском\n");
-    fprintf(stderr, "  .help      - Показать эту справку\n");
-    fprintf(stderr, "\nОпределение типов:\n");
-    fprintf(stderr, "  true/false -> логический тип\n");
-    fprintf(stderr, "  123       -> целое число\n");
-    fprintf(stderr, "  12.34     -> число с плавающей точкой\n");
-    fprintf(stderr, "  null      -> нулевое значение\n");
-    fprintf(stderr, "  текст     -> строка (по умолчанию)\n");
+    fprintf(stderr, "Использование: %s <json_файл> <точка_монтирования>\n", progname);
+    fprintf(stderr, "\nСпециальные файлы:\n");
+    fprintf(stderr, "  .save      - Сохранить изменения\n");
+    fprintf(stderr, "  .modified  - Статус изменений\n");
+    fprintf(stderr, "  .help      - Справка\n");
     fprintf(stderr, "\nПример:\n");
-    fprintf(stderr, "  sudo %s data.json /mnt/jsonfs\n", progname);
-    fprintf(stderr, "  echo save > /mnt/jsonfs/.save\n");
+    fprintf(stderr, "  sudo %s data.json mnt\n", progname);
+    fprintf(stderr, "  echo save | sudo tee mnt/.save\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -67,42 +60,31 @@ int main(int argc, char *argv[]) {
     state->modified = 0;
     state->last_save_time = time(NULL);
     
-    printf("JSONFS v2.0 запуск\n");
+    printf("JSONFS v2.0 запущен\n");
     printf("JSON файл: %s\n", state->json_path);
     printf("Точка монтирования: %s\n", argv[2]);
-    printf("Определение типов: ВКЛ\n");
-    printf("Изменения НЕ будут сохраняться автоматически. Используйте файл .save для сохранения.\n");
-    printf("Swap файлы игнорируются.\n");
+    printf("Используйте 'fusermount -u %s' для размонтирования\n", argv[2]);
     
-    char *fuse_argv[30];
+    char *fuse_argv[20];
     int fuse_argc = 0;
     
     fuse_argv[fuse_argc++] = argv[0];
     fuse_argv[fuse_argc++] = argv[2];
     fuse_argv[fuse_argc++] = "-s";  // Однопоточный режим
     
-    // Добавляем foreground режим для интерактивной работы
-    int foreground = 1;
-for (int i = 3; i < argc; i++) {
-    if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
-        foreground = 0;
-    }
-    fuse_argv[fuse_argc++] = argv[i];
-}
-
-if (foreground) {
-    fuse_argv[fuse_argc++] = "-f";
-}
+    // НЕ используем -f, чтобы FUSE сам управлял сигналами
     
     int ret = fuse_main(fuse_argc, fuse_argv, &jsonfs_ops, state);
     
     if (ret != 0) {
-        fprintf(stderr, "FUSE завершился с ошибкой: %d\n", ret);
-        if (state) {
-            if (state->json_path) free(state->json_path);
-            if (state->root) json_decref(state->root);
-            free(state);
-        }
+        fprintf(stderr, "FUSE ошибка: %d\n", ret);
+    }
+    
+    // Очистка (хотя fuse_main уже должен был вызвать destroy)
+    if (state) {
+        if (state->json_path) free(state->json_path);
+        if (state->root) json_decref(state->root);
+        free(state);
     }
     
     return ret;

@@ -8,13 +8,6 @@
 #include <sys/file.h>
 #include <signal.h>
 
-static volatile int running = 1;
-
-static void sig_handler(int sig) {
-    (void)sig;
-    running = 0;
-}
-
 // Проверка swap файлов (vim, emacs, etc)
 static bool is_swap_file(const char *path) {
     if (!path) return true;
@@ -132,9 +125,6 @@ void* jsonfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
     
     state->modified = 0;
     state->last_save_time = time(NULL);
-    
-    signal(SIGINT, sig_handler);
-    signal(SIGTERM, sig_handler);
     
     return state;
 }
