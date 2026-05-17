@@ -7,15 +7,16 @@
 #include <ctype.h>
 
 // Проверка валидности ключа (без слэшей и спецсимволов)
-static int is_valid_key(const char *key) {
-    if (!key || strlen(key) == 0) return 0;
-    if (strchr(key, '/') != NULL) return 0;
-    if (strchr(key, '.') == key && strlen(key) == 1) return 0;
-    if (strchr(key, '.') == key && *(key+1) == '.' && strlen(key) == 2) return 0;
-    return 1;
+static bool is_valid_key(const char *key) {
+    if (!key || strlen(key) == 0) return false;
+    if (strchr(key, '/') != NULL) return false;
+    if (strcmp(key, ".") == 0 || strcmp(key, "..") == 0) return false;
+    return true;
 }
 
 json_t* jsonfs_get_node(json_t *root, const char *path) {
+    if (!root || !path) return NULL;
+    
     if (strcmp(path, "/") == 0) {
         return root;
     }
@@ -57,6 +58,11 @@ json_t* jsonfs_get_node(json_t *root, const char *path) {
 }
 
 int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
+    if (!root || !path || !value) {
+        if (value) json_decref(value);
+        return -EINVAL;
+    }
+    
     if (strcmp(path, "/") == 0) {
         json_decref(value);
         return -EINVAL;
@@ -119,11 +125,12 @@ int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
         return -ENOENT;
     }
     
-    if (!is_valid_key(last_key)) {
+    if (!is_valid_key(last_key) && !isdigit(last_key[0])) {
         json_decref(value);
         return -EINVAL;
     }
     
+    // Устанавливаем значение
     if (json_is_object(current)) {
         json_object_set_new(current, last_key, value);
         return 0;
@@ -144,6 +151,8 @@ int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
 }
 
 int jsonfs_delete_path(json_t *root, const char *path) {
+    if (!root || !path) return -EINVAL;
+    
     if (strcmp(path, "/") == 0) {
         return -EBUSY;
     }
@@ -196,11 +205,12 @@ int jsonfs_delete_path(json_t *root, const char *path) {
         return -ENOENT;
     }
     
+    // Удаляем последний элемент
     if (parent && json_is_object(parent)) {
         if (is_valid_key(last_key)) {
             json_object_del(parent, last_key);
+            return 0;
         }
-        return 0;
     } else if (parent && json_is_array(parent)) {
         char *endptr;
         long idx = strtol(last_key, &endptr, 10);
@@ -211,20 +221,9 @@ int jsonfs_delete_path(json_t *root, const char *path) {
     } else if (json_is_object(current)) {
         if (is_valid_key(last_key)) {
             json_object_del(current, last_key);
-        }
-        return 0;
-    } else if (json_is_array(current)) {
-        char *endptr;
-        long idx = strtol(last_key, &endptr, 10);
-        if (*endptr == '\0' && idx >= 0) {
-            json_array_remove(current, idx);
             return 0;
         }
     }
     
     return -ENOENT;
-}
-
-int jsonfs_create_path(json_t *root, const char *path, json_t *value) {
-    return jsonfs_set_value(root, path, value);
 }

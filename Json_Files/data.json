@@ -1,17 +1,37 @@
 {
-  "server": "your-proxy-server.com",
-  "server_port": 8388,
-  "local_port": 1080,
-  "password": "your_strong_password_here",
-  "method": "chacha20-ietf-poly1305",
-  "local_address": "0.0.0.0",
-  "timeout": 300,
-  "fast_open": false,
-  "workers": 1,
-  "newfile": "new content",
-  "newnumber": 12345,
-  "newbool": true,
-  "newdir": {
-    "file": "data in dir"
-  }
+  "age": 30,
+  "city": "Moscow",
+  "is_active": true,
+  "scores": [
+    95,
+    87,
+    92
+  ],
+  "address": {
+    "street": "Main St",
+    "zip": 12345
+  },
+  "lastname": "Smith",
+  "age_new": 35,
+  "is_verified": false,
+  "contact": {
+    "email": "john@example.com",
+    "phone": 123456789
+  },
+  "tags": {
+    "0": "developer",
+    "1": "linux"
+  },
+  "company": {
+    "name": "Tech Corp",
+    "year": 2024,
+    "employees": {
+      "count": 5,
+      "0": "Alice",
+      "1": "Bob"
+    }
+  },
+  "testfile": "test",
+  "file1": "test",
+  "test": "hello"
 }

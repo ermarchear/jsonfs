@@ -16,6 +16,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #define MAX_PATH 4096
 #define MAX_DATA 8192
@@ -29,9 +30,8 @@ typedef struct {
 
 // JSON operations
 json_t* jsonfs_get_node(json_t *root, const char *path);
-int jsonfs_create_path(json_t *root, const char *path, json_t *value);
-int jsonfs_delete_path(json_t *root, const char *path);
 int jsonfs_set_value(json_t *root, const char *path, json_t *value);
+int jsonfs_delete_path(json_t *root, const char *path);
 
 // Save operations
 int jsonfs_force_save(jsonfs_state *state);
@@ -56,5 +56,6 @@ int jsonfs_rename(const char *from, const char *to, unsigned int flags);
 int jsonfs_truncate(const char *path, off_t size, struct fuse_file_info *fi);
 int jsonfs_utimens(const char *path, const struct timespec ts[2], struct fuse_file_info *fi);
 int jsonfs_fsync(const char *path, int isdatasync, struct fuse_file_info *fi);
+
 
 #endif
