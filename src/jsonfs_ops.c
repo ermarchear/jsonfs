@@ -14,6 +14,7 @@ static bool is_valid_key(const char *key) {
     return true;
 }
 
+// Получение узла JSON по пути
 json_t* jsonfs_get_node(json_t *root, const char *path) {
     if (!root || !path) return NULL;
     
@@ -57,6 +58,7 @@ json_t* jsonfs_get_node(json_t *root, const char *path) {
     return current;
 }
 
+// Установка значения в JSON по пути (создает промежуточные узлы)
 int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
     if (!root || !path || !value) {
         if (value) json_decref(value);
@@ -150,6 +152,7 @@ int jsonfs_set_value(json_t *root, const char *path, json_t *value) {
     return -ENOTDIR;
 }
 
+// Удаление узла JSON по пути
 int jsonfs_delete_path(json_t *root, const char *path) {
     if (!root || !path) return -EINVAL;
     

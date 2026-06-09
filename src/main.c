@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <sys/stat.h>  // Добавьте эту строку
+#include <sys/stat.h>
 
+// Таблица операций FUSE с колбэками
 static struct fuse_operations jsonfs_ops = {
     .init       = jsonfs_init,
     .destroy    = jsonfs_destroy,
@@ -24,6 +25,7 @@ static struct fuse_operations jsonfs_ops = {
     .fsync      = jsonfs_fsync,
 };
 
+// Вывод справки
 void print_usage(const char *progname) {
     fprintf(stderr, "JSONFS - JSON Файловая система v2.0\n");
     fprintf(stderr, "Использование: %s <json_файл> <точка_монтирования>\n", progname);
@@ -36,6 +38,7 @@ void print_usage(const char *progname) {
     fprintf(stderr, "  echo save | sudo tee mnt/.save\n");
 }
 
+// Главная функция
 int main(int argc, char *argv[]) {
     if (argc < 3) {
         print_usage(argv[0]);
@@ -91,7 +94,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "FUSE ошибка: %d\n", ret);
     }
     
-    // Очистка (хотя fuse_main уже должен был вызвать destroy)
+    // Очистка ресурсов
     if (state) {
         if (state->json_path) free(state->json_path);
         if (state->root) json_decref(state->root);

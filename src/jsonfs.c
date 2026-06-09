@@ -26,7 +26,7 @@ static bool is_swap_file(const char *path) {
     return false;
 }
 
-// Определение типа значения по строке
+// Определение типа значения по строке (автоопределение числа/строки/булева)
 static json_t* parse_value_by_content(const char *str) {
     if (!str) return json_string("");
     
@@ -55,7 +55,7 @@ static json_t* parse_value_by_content(const char *str) {
     return result;
 }
 
-// Сохранение JSON на диск
+// Сохранение JSON на диск (через временный файл для атомарности)
 static int jsonfs_save(jsonfs_state *state) {
     if (!state || !state->json_path || !state->root) {
         return -EINVAL;
@@ -88,16 +88,19 @@ static int jsonfs_save(jsonfs_state *state) {
     return 0;
 }
 
+// Принудительное сохранение (вызывается извне)
 int jsonfs_force_save(jsonfs_state *state) {
     if (!state) return -EINVAL;
     return jsonfs_save(state);
 }
 
+// Проверка наличия несохраненных изменений
 int jsonfs_is_modified(jsonfs_state *state) {
     if (!state) return 0;
     return state->modified;
 }
 
+// Инициализация ФС при монтировании
 void* jsonfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
     (void)conn;
     jsonfs_state *state = (jsonfs_state*)fuse_get_context()->private_data;
@@ -129,6 +132,7 @@ void* jsonfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
     return state;
 }
 
+// Очистка ресурсов при размонтировании
 void jsonfs_destroy(void *private_data) {
     jsonfs_state *state = (jsonfs_state*)private_data;
     
@@ -151,6 +155,7 @@ void jsonfs_destroy(void *private_data) {
     free(state);
 }
 
+// Получение атрибутов файла/директории (stat, ls)
 int jsonfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
     (void)fi;
     if (!path || !stbuf) return -EINVAL;
@@ -234,6 +239,7 @@ int jsonfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *
     return 0;
 }
 
+// Чтение содержимого директории (ls)
 int jsonfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
                    off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags) {
     (void)offset;
@@ -278,6 +284,7 @@ int jsonfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     return 0;
 }
 
+// Чтение содержимого файла (cat)
 int jsonfs_read(const char *path, char *buf, size_t size, off_t offset, 
                 struct fuse_file_info *fi) {
     (void)fi;
@@ -352,6 +359,7 @@ int jsonfs_read(const char *path, char *buf, size_t size, off_t offset,
     return size;
 }
 
+// Запись в файл (echo >)
 int jsonfs_write(const char *path, const char *buf, size_t size, 
                  off_t offset, struct fuse_file_info *fi) {
     (void)fi;
@@ -402,6 +410,7 @@ int jsonfs_write(const char *path, const char *buf, size_t size,
     }
 }
 
+// Создание нового файла (touch)
 int jsonfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
     (void)mode;
     (void)fi;
@@ -426,6 +435,7 @@ int jsonfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
     return result;
 }
 
+// Удаление файла (rm)
 int jsonfs_unlink(const char *path) {
     if (!path) return -EINVAL;
     
@@ -440,6 +450,7 @@ int jsonfs_unlink(const char *path) {
     return result;
 }
 
+// Создание директории (mkdir)
 int jsonfs_mkdir(const char *path, mode_t mode) {
     (void)mode;
     
@@ -461,10 +472,12 @@ int jsonfs_mkdir(const char *path, mode_t mode) {
     return result;
 }
 
+// Удаление директории (rmdir)
 int jsonfs_rmdir(const char *path) {
     return jsonfs_unlink(path);
 }
 
+// Переименование файла/директории (mv)
 int jsonfs_rename(const char *from, const char *to, unsigned int flags) {
     if (!from || !to) return -EINVAL;
     if (flags != 0) return -EINVAL;
@@ -500,6 +513,7 @@ int jsonfs_rename(const char *from, const char *to, unsigned int flags) {
     return result;
 }
 
+// Усечение файла (truncate)
 int jsonfs_truncate(const char *path, off_t size, struct fuse_file_info *fi) {
     (void)fi;
     
@@ -536,6 +550,7 @@ int jsonfs_truncate(const char *path, off_t size, struct fuse_file_info *fi) {
     return result;
 }
 
+// Открытие файла
 int jsonfs_open(const char *path, struct fuse_file_info *fi) {
     if (!path || !fi) return -EINVAL;
     
@@ -558,6 +573,7 @@ int jsonfs_open(const char *path, struct fuse_file_info *fi) {
     return 0;
 }
 
+// Обновление временных меток (заглушка)
 int jsonfs_utimens(const char *path, const struct timespec ts[2], struct fuse_file_info *fi) {
     (void)path;
     (void)ts;
@@ -565,6 +581,7 @@ int jsonfs_utimens(const char *path, const struct timespec ts[2], struct fuse_fi
     return 0;
 }
 
+// Синхронизация файла с диском
 int jsonfs_fsync(const char *path, int isdatasync, struct fuse_file_info *fi) {
     (void)path;
     (void)isdatasync;

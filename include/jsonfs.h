@@ -18,26 +18,27 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define MAX_PATH 4096
-#define MAX_DATA 8192
+#define MAX_PATH 4096      // Максимальная длина пути
+#define MAX_DATA 8192      // Максимальный размер данных
 
+// Структура состояния файловой системы
 typedef struct {
-    char *json_path;
-    json_t *root;
-    int modified;
-    time_t last_save_time;
+    char *json_path;       // Путь к JSON файлу
+    json_t *root;          // Корневой объект JSON
+    int modified;          // Флаг изменений (1 - есть, 0 - нет)
+    time_t last_save_time; // Время последнего сохранения
 } jsonfs_state;
 
-// JSON operations
+// Функции для работы с JSON
 json_t* jsonfs_get_node(json_t *root, const char *path);
 int jsonfs_set_value(json_t *root, const char *path, json_t *value);
 int jsonfs_delete_path(json_t *root, const char *path);
 
-// Save operations
+// Функции сохранения
 int jsonfs_force_save(jsonfs_state *state);
 int jsonfs_is_modified(jsonfs_state *state);
 
-// FUSE callbacks
+// Колбэки FUSE
 void* jsonfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg);
 void jsonfs_destroy(void *private_data);
 int jsonfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi);
