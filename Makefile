@@ -123,8 +123,7 @@ test: $(TARGET) create-test-json
 	@echo "📄 Содержимое JSON файла после теста:"
 	@cat $(JSONDIR)/test.json
 
-
-# Очистка
+# Очистка тестов
 clean-test:
 	@echo "🧹 Очистка тестовых файлов..."
 	@-sudo fusermount -u $(MOUNTPOINT) 2>/dev/null || sudo umount $(MOUNTPOINT) 2>/dev/null
@@ -133,11 +132,33 @@ clean-test:
 	@sudo rm -f /tmp/jsonfs.pid /tmp/jsonfs.log /tmp/valgrind.pid
 	@echo "✅ Тестовые файлы очищены"
 
+# Valgrind тест
+valgrind-test: $(TARGET) create-test-json
+	@echo "=== Запуск valgrind теста ==="
+	@mkdir -p $(MOUNTPOINT)
+	@sudo valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+		--log-file=/tmp/valgrind.log ./$(TARGET) $(JSONDIR)/test.json ./$(MOUNTPOINT) &
+	@echo $$! | sudo tee /tmp/valgrind.pid > /dev/null
+	@sleep 3
+	@echo "📝 Выполнение операций..."
+	@echo "test" | sudo tee ./$(MOUNTPOINT)/testfile > /dev/null 2>&1 || true
+	@cat ./$(MOUNTPOINT)/testfile > /dev/null 2>&1 || true
+	@echo "save" | sudo tee ./$(MOUNTPOINT)/.save > /dev/null 2>&1 || true
+	@sleep 1
+	@echo "🔗 Размонтирование..."
+	@sudo fusermount -u ./$(MOUNTPOINT) 2>/dev/null || sudo umount ./$(MOUNTPOINT) 2>/dev/null
+	@sleep 1
+	@sudo kill $$(cat /tmp/valgrind.pid) 2>/dev/null || true
+	@echo "📊 Результаты valgrind:"
+	@sudo grep -E "definitely lost|indirectly lost|possibly lost|ERROR SUMMARY" /tmp/valgrind.log
+	@sudo rm -f /tmp/valgrind.pid /tmp/valgrind.log
+	@echo "✅ Valgrind тест завершен"
+
 help:
 	@echo "📖 Доступные команды:"
 	@echo "  make              - Собрать проект"
 	@echo "  make clean        - Очистить сборку"
-	@echo "  make test         - Запустить тестирование"
+	echo "  make test         - Запустить тестирование"
 	@echo "  make run          - Запустить JSONFS (интерактивно)"
 	@echo "  make start        - Запустить JSONFS в фоне"
 	@echo "  make stop         - Остановить JSONFS"

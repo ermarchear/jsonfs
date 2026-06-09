@@ -57,5 +57,4 @@ int jsonfs_truncate(const char *path, off_t size, struct fuse_file_info *fi);
 int jsonfs_utimens(const char *path, const struct timespec ts[2], struct fuse_file_info *fi);
 int jsonfs_fsync(const char *path, int isdatasync, struct fuse_file_info *fi);
 
-
 #endif

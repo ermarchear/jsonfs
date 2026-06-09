@@ -41,12 +41,12 @@ static json_t* parse_value_by_content(const char *str) {
     if (strcmp(str, "false") == 0) return json_false();
     
     long long int_val = strtoll(str, &endptr, 10);
-    if (*endptr == '\0' || isspace(*endptr)) {
+    if (*endptr == '\0') {
         return json_integer(int_val);
     }
     
     double real_val = strtod(str, &endptr);
-    if (*endptr == '\0' || isspace(*endptr)) {
+    if (*endptr == '\0') {
         return json_real(real_val);
     }
     
@@ -479,18 +479,18 @@ int jsonfs_rename(const char *from, const char *to, unsigned int flags) {
     
     json_incref(node);
     
-    json_t *existing = jsonfs_get_node(state->root, to);
+    // Сначала удаляем исходный, потом создаем новый
+    if (jsonfs_delete_path(state->root, from) != 0) {
+        json_decref(node);
+        return -ENOENT;
+    }
     
+    json_t *existing = jsonfs_get_node(state->root, to);
     if (existing) {
         if (jsonfs_delete_path(state->root, to) != 0) {
             json_decref(node);
             return -ENOENT;
         }
-    }
-    
-    if (jsonfs_delete_path(state->root, from) != 0) {
-        json_decref(node);
-        return -ENOENT;
     }
     
     int result = jsonfs_set_value(state->root, to, node);
@@ -508,7 +508,7 @@ int jsonfs_truncate(const char *path, off_t size, struct fuse_file_info *fi) {
     jsonfs_state *state = (jsonfs_state*)fuse_get_context()->private_data;
     if (!state) return -EIO;
     
-    if (size < 0) return -EINVAL;
+    if (size < 0 || size > MAX_DATA - 1) return -EINVAL;
     
     json_t *node = jsonfs_get_node(state->root, path);
     if (!node) return -ENOENT;
