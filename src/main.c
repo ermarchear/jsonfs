@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/stat.h>  // Добавьте эту строку
 
 static struct fuse_operations jsonfs_ops = {
     .init       = jsonfs_init,
@@ -49,11 +50,23 @@ int main(int argc, char *argv[]) {
     
     memset(state, 0, sizeof(jsonfs_state));
     
-    state->json_path = realpath(argv[1], NULL);
-    if (!state->json_path) {
-        perror("realpath");
-        free(state);
-        return 1;
+    // Проверяем существование файла
+    struct stat st;
+    if (stat(argv[1], &st) != 0) {
+        // Файл не существует, используем путь как есть
+        state->json_path = strdup(argv[1]);
+        if (!state->json_path) {
+            perror("strdup");
+            free(state);
+            return 1;
+        }
+    } else {
+        state->json_path = realpath(argv[1], NULL);
+        if (!state->json_path) {
+            perror("realpath");
+            free(state);
+            return 1;
+        }
     }
     
     state->root = NULL;
@@ -71,8 +84,6 @@ int main(int argc, char *argv[]) {
     fuse_argv[fuse_argc++] = argv[0];
     fuse_argv[fuse_argc++] = argv[2];
     fuse_argv[fuse_argc++] = "-s";  // Однопоточный режим
-    
-    // НЕ используем -f, чтобы FUSE сам управлял сигналами
     
     int ret = fuse_main(fuse_argc, fuse_argv, &jsonfs_ops, state);
     
