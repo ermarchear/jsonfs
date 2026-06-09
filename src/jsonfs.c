@@ -67,7 +67,7 @@ static int jsonfs_save(jsonfs_state *state) {
     FILE *f = fopen(temp_path, "w");
     if (!f) return -EIO;
     
-    if (json_dumpf(state->root, f, JSON_INDENT(2) | JSON_ENSURE_ASCII) != 0) {
+    if (json_dumpf(state->root, f, JSON_INDENT(2)) != 0) {
         fclose(f);
         unlink(temp_path);
         return -EIO;
