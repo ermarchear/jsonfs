@@ -1,1 +1,1 @@
-{"test": "value"}
+{"test": "value", "number": 123, "nested": {"key": "data"}}

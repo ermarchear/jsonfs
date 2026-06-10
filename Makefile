@@ -17,6 +17,9 @@ TARGET = $(BINDIR)/jsonfs
 
 .PHONY: all clean test create-test-json run mount umount start stop valgrind-test help
 
+# Проверка и настройка FUSE (выполняется один раз при первой сборке)
+# Отдельная команда для настройки (пользователь запускает если нужно)
+
 all: $(TARGET)
 	@echo "✅ Сборка завершена"
 
@@ -30,6 +33,26 @@ clean:
 	@echo "🧹 Очистка..."
 	rm -rf $(OBJDIR)/*.o $(TARGET)
 	@echo "✅ Очистка завершена"
+
+setup:
+	@if [ ! -w /dev/fuse ]; then \
+		echo "=== Настройка FUSE ==="; \
+		if ! getent group fuse > /dev/null 2>&1; then \
+			sudo groupadd fuse; \
+		fi; \
+		if ! groups $(USER) | grep -q fuse; then \
+			sudo usermod -aG fuse $(USER); \
+		fi; \
+		sudo chmod 666 /dev/fuse; \
+		if [ -f /etc/fuse.conf ] && ! grep -q "^user_allow_other" /etc/fuse.conf 2>/dev/null; then \
+			echo "user_allow_other" | sudo tee -a /etc/fuse.conf > /dev/null; \
+		fi; \
+		echo "=========================================="; \
+		echo "Настройка завершена! Перезайдите в систему."; \
+		echo "=========================================="; \
+	else \
+		echo "FUSE уже настроен"; \
+	fi
 
 # Создание тестового JSON файла
 create-test-json:
@@ -156,14 +179,15 @@ valgrind-test: $(TARGET) create-test-json
 
 help:
 	@echo "📖 Доступные команды:"
-	@echo "  make              - Собрать проект"
-	@echo "  make clean        - Очистить сборку"
-	echo "  make test         - Запустить тестирование"
-	@echo "  make run          - Запустить JSONFS (интерактивно)"
-	@echo "  make start        - Запустить JSONFS в фоне"
-	@echo "  make stop         - Остановить JSONFS"
-	@echo "  make mount        - Смонтировать (интерактивно)"
-	@echo "  make umount       - Размонтировать"
-	@echo "  make valgrind-test - Проверить утечки памяти"
-	@echo "  make clean-test   - Очистить тестовые файлы"
-	@echo "  make create-test-json - Создать тестовый JSON"
+	@echo "make                  - Собрать проект"
+	@echo "make clean            - Очистить сборку"
+	@echo "make setup            - Настроить сборку"
+	@echo "make test             - Запустить тестирование"
+	@echo "make run              - Запустить JSONFS (интерактивно)"
+	@echo "make start            - Запустить JSONFS в фоне"
+	@echo "make stop             - Остановить JSONFS"
+	@echo "make mount            - Смонтировать (интерактивно)"
+	@echo "make umount           - Размонтировать"
+	@echo "make valgrind-test    - Проверить утечки памяти"
+	@echo "make clean-test       - Очистить тестовые файлы"
+	@echo "make create-test-json - Создать тестовый JSON"
