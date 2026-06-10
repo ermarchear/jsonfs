@@ -125,13 +125,13 @@ test: $(TARGET) create-test-json
 	@sudo mkdir ./$(MOUNTPOINT)/dir 2>/dev/null
 	@echo "inside" | sudo tee ./$(MOUNTPOINT)/dir/file > /dev/null
 	@echo "📁 Содержимое директории:"
-	@ls -la ./$(MOUNTPOINT)/
+	@sudo ls -la ./$(MOUNTPOINT)/
 	@echo "📖 Чтение file1:"
-	@cat ./$(MOUNTPOINT)/file1
+	@sudo cat ./$(MOUNTPOINT)/file1
 	@echo "💾 Сохранение изменений..."
 	@echo "save" | sudo tee ./$(MOUNTPOINT)/.save > /dev/null
 	@echo "📊 Статус изменений:"
-	@cat ./$(MOUNTPOINT)/.modified
+	@sudo cat ./$(MOUNTPOINT)/.modified
 	@echo "🗑️ Удаление файлов..."
 	@sudo rm ./$(MOUNTPOINT)/file1
 	@sudo rm -rf ./$(MOUNTPOINT)/dir
